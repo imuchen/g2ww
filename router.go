@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gofiber/fiber"
 )
@@ -27,9 +28,9 @@ type Hook struct {
 }
 
 type evalMatch struct {
-	Metric string `json:"metric"`
-	Value  float64    `json:"value"`
-	tags   string `json:"tags"`
+	Metric string  `json:"metric"`
+	Value  float64 `json:"value"`
+	tags   string  `json:"tags"`
 }
 
 var sent_count int = 0
@@ -47,7 +48,7 @@ func processMatches(evalMatches []evalMatch) string {
 	var result string = ""
 	var j int
 	for j = 0; j < len(evalMatches); j++ {
-		result += "\n" + evalMatches[j].Metric + ":" + strconv.FormatFloat(evalMatches[j].Value,'f',6,64)
+		result += "\n" + evalMatches[j].Metric + ":" + strconv.FormatFloat(evalMatches[j].Value, 'f', 6, 64)
 	}
 	return result
 }
@@ -77,7 +78,7 @@ func GwWorker() func(c *fiber.Ctx) {
 			  ]
 			}
 		  }
-		`, h.Title, h.Message + processMatches(h.EvalMatches), h.RuleUrl, h.ImageUrl)
+		`, h.Title, h.Message+processMatches(h.EvalMatches), strings.Replace(h.RuleUrl, "editPanel=", "viewPanel=", -1), h.ImageUrl)
 		fmt.Println(msgStr)
 		jsonStr := []byte(msgStr)
 		req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
