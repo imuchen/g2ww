@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gofiber/fiber"
 )
@@ -48,8 +49,9 @@ func processMatches(evalMatches []evalMatch) string {
 	var result string = ""
 	var j int
 	for j = 0; j < len(evalMatches); j++ {
-		result += "\n" + evalMatches[j].Metric + ":" + strconv.FormatFloat(evalMatches[j].Value, 'f', 6, 64)
+		result += evalMatches[j].Metric + ":" + strconv.FormatFloat(evalMatches[j].Value, 'f', 6, 64)
 	}
+	result = strings.Replace(result, "\"", "\\\"", -1)
 	return result
 }
 
@@ -79,7 +81,7 @@ func GwWorker() func(c *fiber.Ctx) {
 			}
 		  }
 		`, h.Title, h.Message+processMatches(h.EvalMatches), strings.Replace(h.RuleUrl, "editPanel=", "viewPanel=", -1), h.ImageUrl)
-		fmt.Println(msgStr)
+		fmt.Println(time.Now().Format("2006-01-02 15:04:05") + msgStr)
 		jsonStr := []byte(msgStr)
 		req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
 		req.Header.Set("Content-Type", "application/json")
@@ -87,10 +89,14 @@ func GwWorker() func(c *fiber.Ctx) {
 		resp, err := client.Do(req)
 		if err != nil {
 			c.Send("Error sending to WeChat Work API")
+			fmt.Println(time.Now().Format("2006-01-02 15:04:05") + err.Error())
 			return
 		}
 		defer resp.Body.Close()
 		c.Send(resp)
+		fmt.Println(time.Now().Format("2006-01-02 15:04:05"))
+		fmt.Println(resp)
+		fmt.Println("==============================================")
 		sent_count++
 	}
 }
